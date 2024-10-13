@@ -171,10 +171,13 @@ def get_patient_medicines(request):
 @require_http_methods(["PUT"])
 def update_patient_medicines(request):
     data = json.loads(request.body)
-    patient_metadata = PatientMetadata.objects.first()
-    patient_metadata.medicine = json.dumps(data['medicine'])
-    patient_metadata.save()
-    return JsonResponse({'success': True})
+    patient_metadata, created = PatientMetadata.objects.get_or_create(defaults={'medicine': '[]'})
+    if 'medicine' in data:
+        patient_metadata.medicine = json.dumps(data['medicine'])
+        patient_metadata.save()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'error': 'No medicine data provided'}, status=400)
 
 @require_http_methods(["GET"])
 def get_last_logged_in(request):

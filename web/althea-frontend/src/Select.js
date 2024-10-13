@@ -16,7 +16,9 @@ function Select() {
     for (const drug of validDrugs) {
       try {
         // check if medicine already exists
-        const response = await fetch('http://127.0.0.1:8000/api/medicine/name/?name=' + drug.value.trim());
+        let response = await fetch('http://127.0.0.1:8000/api/medicine/name/?name=' + drug.value.trim());
+        let data;
+
         if (!response.ok) {
           // if medicine does not exist, create it
           response = await fetch('http://127.0.0.1:8000/api/medicine/create/', {
@@ -31,37 +33,45 @@ function Select() {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          const data = await response.json();
-        }
-        // if medicine exists
-        {
-           response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/`)
-           if (!response.ok) {
+          data = await response.json();
+          console.log(`Medicine created: ${data.id}`);
+        } else {
+          // if medicine exists
+          response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/`);
+          if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
-           }
-           data = await response.json();
-           data.push(drug.value.trim());
-           response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/update/`, {
-            method: 'POST',
+          }
+          data = await response.json();
+          console.log(data);
+          let updatedMedicines = Array.isArray(data.medicines) ? [...data.medicines] : [];
+
+          response = await fetch(`http://127.0.0.1:8000/api/medicine/name/?name=${encodeURIComponent(drug.value.trim())}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          // Add the new medicine ID if it's not already in the list
+          if (!updatedMedicines.some(medicine => medicine.id === data.id)) {
+            updatedMedicines.push(data.id);
+          }
+          
+          console.log(updatedMedicines);
+          
+          response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/update/`, {
+            method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ medicines: data }),
-           });
-           if (!response.ok) {
+            body: JSON.stringify({ medicine: updatedMedicines.map(med => typeof med === 'string' ? med : med.id) }),
+          });
+          if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
-           }
+          }
+          data = await response.json();
+          console.log(`Medicine updated: ${data.success}`);
         }
-        
-        
-        
-
-        
-
-        const data = await response.json();
-        console.log(`Medicine created: ${data.id}`);
       } catch (error) {
-        console.error(`Error creating medicine: ${drug.value}`, error);
+        console.error(`Error processing medicine: ${drug.value}`, error);
         // You might want to handle this error, perhaps by showing a message to the user
       }
     }
