@@ -92,6 +92,7 @@ const SymptomTracker = () => {
               </h2>
               {expandedSymptoms.includes(symptom) && (
                 <div>
+                  <p className="font-semibold">This may be caused by:</p> {/* Added text */}
                   <ul className="mt-2 list-disc list-inside text-gray-700">
                     {symptomDrugMap[symptom] ? (
                       symptomDrugMap[symptom].map((drug, idx) => (
@@ -122,9 +123,17 @@ const SymptomTracker = () => {
                     </div>
                   </div>
                   {severityMap[symptom] && (
-                    <p className="mt-2 text-gray-800">
-                      Severity level: <strong>{severityMap[symptom]}</strong>
-                    </p>
+                    <div className="mt-2 text-gray-800">
+                      <p>
+                        Severity level: <strong>{severityMap[symptom]}</strong>
+                      </p>
+                      {(severityMap[symptom] === 'Moderate') && (
+                        <p className="text-yellow-600 mt-1">You may want to contact your primary care provider.</p>
+                      )}
+                      {(severityMap[symptom] === 'Severe') && (
+                        <p className="text-red-600 font-bold mt-1">It is strongly advised that you contact your primary care provider.</p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
