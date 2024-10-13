@@ -1,0 +1,14 @@
+@font-face {
+     font-family: 'Sinera';
+     src: url('./fonts/Sinera.woff2') format('woff2'),
+          url('./fonts/Sinera.woff') format('woff'),
+          url('./fonts/Sinera.ttf') format('truetype'),
+          url('./fonts/Sinera.otf') format('opentype');
+     font-weight: normal;
+     font-style: normal;
+   }
+   
+   body {
+     font-family: 'Sinera', sans-serif; /* Set default font for the body */
+   } 
+   
