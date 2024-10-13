@@ -41,20 +41,19 @@ function Select() {
     <div className="min-h-screen bg-gradient-to-r from-indigo-200 via-blue-200 to-green-200 text-white flex justify-center items-center">
       <div className="flex flex-col justify-center items-start px-6">
         <header className="text-4xl font-bold text-center mb-6">
-          What Drugs do You Normally Take, {localStorage.getItem('inputName')}?
+          What drugs do you normally take, {localStorage.getItem('inputName')}?
         </header>
-        <p className="text-white font-bold mb-4">lorem ipsum foo bar</p>
 
         {/* Buttons container */}
         <div className="flex space-x-4 mb-4">
           <button
-            className="bg-white text-[#3D9991] font-bold py-2 px-4 rounded transition duration-300 hover:bg-purple-500 hover:text-black shadow-lg"
+            className="bg-[#24698E] text-white font-bold py-2 px-4 rounded transition duration-300 hover:bg-purple-500 hover:text-black shadow-lg"
             onClick={addTo}
           >
             +
           </button>
           <button
-            className="bg-purple-500 text-black font-bold py-2 px-4 rounded transition duration-300 hover:bg-white hover:text-purple-500 shadow-lg"
+            className="bg-[#24698E] text-white font-bold py-2 px-4 rounded transition duration-300 hover:bg-white hover:text-purple-500 shadow-lg"
             onClick={subTo}
           >
             -

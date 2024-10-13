@@ -13,7 +13,7 @@ function App() {
   const [name, setName] = useState('');
   const [is, setIs] = useState(false);
   const [isVisible, setIsVisible] = useState(false); // 
-  const typewriterText = "Yoour prescription and medical symptom tracking companion"; // Text for typewriter effect
+  const typewriterText = "YYour prescription and medical symptom tracking companion"; // Text for typewriter effect
   const displayedText = useTypewriter(typewriterText, 100); //
 
   useEffect(() => {
