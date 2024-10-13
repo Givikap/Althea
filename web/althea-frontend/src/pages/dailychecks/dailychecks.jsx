@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PiListHeart } from "react-icons/pi"; // Import the icon
+import { PiListHeart } from "react-icons/pi";
+
 
 const PrescriptionTracker = () => {
   const navigate = useNavigate();
   const [name, setName] = useState('');
+  const [prescriptionsData, setPrescriptionsData] = useState([]);
+  const [checkedItems, setCheckedItems] = useState({});
 
   // useEffect to get the name from local storage
   useEffect(() => {
@@ -12,18 +15,45 @@ const PrescriptionTracker = () => {
     if (savedName) {
       setName(savedName);
     }
+
+    // Fetch prescriptions data
+    const fetchPrescriptions = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/patient/metadata/');
+        const data = await response.json();
+        console.log('API response:', data); // Debug log
+
+        const prescriptions = data.medicine;
+        console.log('Prescriptions:', prescriptions);
+
+        // Fetch medicine names for each prescription
+        const prescriptionsWithNames = await Promise.all(
+          prescriptions.map(async (prescription) => {
+            try {
+              const medicineResponse = await fetch(`http://127.0.0.1:8000/api/medicine/${prescription}/`);
+              const medicineData = await medicineResponse.json();
+              return {
+                id: prescription,
+                name: medicineData.name
+              };
+            } catch (error) {
+              console.error(`Error fetching medicine data for ${prescription}:`, error);
+              return {
+                id: prescription,
+                name: 'Unknown Medicine'
+              };
+            }
+          })
+        );
+
+        setPrescriptionsData(prescriptionsWithNames);
+      } catch (error) {
+        console.error('Error fetching prescriptions:', error);
+      }
+    };
+
+    fetchPrescriptions();
   }, []);
-
-  const [checkedItems, setCheckedItems] = useState({});
-
-  const prescriptionsData = [
-    { id: 1, name: 'Aspirin' },
-    { id: 2, name: 'Metformin' },
-    { id: 3, name: 'Lisinopril' },
-    { id: 4, name: 'Atorvastatin' },
-    { id: 5, name: 'Omeprazole' },
-    { id: 6, name: 'Simvastatin' },
-  ];
 
   const handleLogs = () => {
     navigate('/logs');

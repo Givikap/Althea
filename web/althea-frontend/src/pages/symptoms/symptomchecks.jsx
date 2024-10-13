@@ -8,16 +8,16 @@ const symptomList = [
 ];
 
 const symptomDrugMap = {
-  'Headache': ['Aspirin', 'Ibuprofen', 'Acetaminophen'],
-  'Cough': ['Codeine', 'Dextromethorphan', 'Hydrocodone'],
-  'Fever': ['Ibuprofen', 'Acetaminophen', 'Naproxen'],
-  'Sore throat': ['Penicillin', 'Amoxicillin'],
-  'Fatigue': ['Metformin', 'Atorvastatin', 'Lisinopril'],
-  'Nausea': ['Metformin', 'Lisinopril', 'Simvastatin'],
-  'Chest pain': ['Aspirin', 'Nitroglycerin'],
-  'Shortness of breath': ['Beta-blockers', 'ACE inhibitors'],
-  'Runny nose': ['Antihistamines', 'Decongestants'],
-  'Body aches': ['Ibuprofen', 'Acetaminophen', 'Naproxen']
+  'Headache': ['aspirin', 'ibuprofen', 'acetaminophen'],
+  'Cough': ['codeine', 'dextromethorphan', 'hydrocodone'],
+  'Fever': ['ibuprofen', 'acetaminophen', 'naproxen'],
+  'Sore throat': ['penicillin', 'amoxicillin'],
+  'Fatigue': ['metformin', 'atorvastatin', 'lisinopril'],
+  'Nausea': ['metformin', 'lisinopril', 'simvastatin'],
+  'Chest pain': ['aspirin', 'nitroglycerin'],
+  'Shortness of breath': ['betaBlockers', 'aceInhibitors'],
+  'Runny nose': ['antihistamines', 'decongestants'],
+  'Body aches': ['ibuprofen', 'acetaminophen', 'naproxen']
 };
 
 const SymptomTracker = () => {
