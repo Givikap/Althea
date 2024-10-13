@@ -283,7 +283,7 @@ def check_symptom_medicines(request):
 
     print(f"Received request with symptom: {symptom}, patient_rating: {patient_rating}, medicine_guids: {medicine_guids}")
 
-    if not all([symptom, patient_rating is not None, medicine_guids]):
+    if not symptom or not medicine_guids:
         return JsonResponse({'error': 'Missing required parameters'}, status=400)
 
     matching_medicines = []
@@ -297,14 +297,24 @@ def check_symptom_medicines(request):
                 med_symptom_name = med_symptom[0].lower()  # Convert to lowercase
                 med_symptom_severity = med_symptom[1]
                 
-                if med_symptom_name == symptom and med_symptom_severity in [patient_rating, patient_rating - 1]:
-                    print(f"Full match found: {medicine.name} for symptom {symptom}")
-                    matching_medicines.append({
-                        'name': medicine.name,
-                        'id': str(medicine.id),
-                        'symptom': med_symptom
-                    })
-                    break
+                if med_symptom_name == symptom:
+                    if patient_rating is not None:
+                        if med_symptom_severity in [patient_rating, patient_rating - 1]:
+                            print(f"Full match found: {medicine.name} for symptom {symptom}")
+                            matching_medicines.append({
+                                'name': medicine.name,
+                                'id': str(medicine.id),
+                                'symptom': med_symptom
+                            })
+                            break
+                    else:
+                        print(f"Match found: {medicine.name} for symptom {symptom}")
+                        matching_medicines.append({
+                            'name': medicine.name,
+                            'id': str(medicine.id),
+                            'symptom': med_symptom
+                        })
+                        break
         except Medicine.DoesNotExist:
             print(f"Medicine with ID {guid} not found")
             continue
