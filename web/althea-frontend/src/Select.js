@@ -5,11 +5,79 @@ function Select() {
   const navigate = useNavigate();
   
   // State to hold drugs information
-  const [drugs, setDrugs] = useState([]); 
+  const [drugs, setDrugs] = useState([]);
   const [add, setAdd] = useState(0);
 
-  const handleContinue = () => {
-    navigate('/check'); // Navigate to daily checks page
+  const handleContinue = async () => {
+    // Filter out any empty drug entries
+    const validDrugs = drugs.filter(drug => drug.value.trim() !== '');
+
+    // Create medicines in the backend
+    for (const drug of validDrugs) {
+      try {
+        // check if medicine already exists
+        let response = await fetch('http://127.0.0.1:8000/api/medicine/name/?name=' + drug.value.trim());
+        let data;
+
+        if (!response.ok) {
+          // if medicine does not exist, create it
+          response = await fetch('http://127.0.0.1:8000/api/medicine/create/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: drug.value.trim() }),
+          });
+          
+          // if not successful, throw an error
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          console.log(`Medicine created: ${data.id}`);
+        } else {
+          // if medicine exists
+          response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          console.log(data);
+          let updatedMedicines = Array.isArray(data.medicines) ? [...data.medicines] : [];
+
+          response = await fetch(`http://127.0.0.1:8000/api/medicine/name/?name=${encodeURIComponent(drug.value.trim())}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          // Add the new medicine ID if it's not already in the list
+          if (!updatedMedicines.some(medicine => medicine.id === data.id)) {
+            updatedMedicines.push(data.id);
+          }
+          
+          console.log(updatedMedicines);
+          
+          response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/update/`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ medicine: updatedMedicines.map(med => typeof med === 'string' ? med : med.id) }),
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          console.log(`Medicine updated: ${data.success}`);
+        }
+      } catch (error) {
+        console.error(`Error processing medicine: ${drug.value}`, error);
+        // You might want to handle this error, perhaps by showing a message to the user
+      }
+    }
+
+    // After creating all medicines, navigate to the daily checks page
+    navigate('/check');
   };
 
   const addTo = () => {
@@ -17,7 +85,6 @@ function Select() {
       // Add a new input field with an empty value
       setDrugs([...drugs, { id: add, value: '' }]);
       setAdd(add + 1);
-      console.log(drugs);
     }
   };
 
@@ -26,7 +93,6 @@ function Select() {
       // Remove the last input field
       setDrugs(drugs.slice(0, -1));
       setAdd(add - 1);
-      console.log(drugs);
     }
   };
 
