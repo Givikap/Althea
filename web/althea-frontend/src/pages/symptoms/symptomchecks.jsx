@@ -188,6 +188,23 @@ const SymptomTracker = () => {
     );
   };
 
+  const getAverageRating = () => {
+    const ratings = Object.values(severityMap);
+    if (ratings.length === 0) return 0;
+    const sum = ratings.reduce((a, b) => a + b, 0);
+    return sum / ratings.length;
+  };
+
+  const getUrgencyMessage = (averageRating) => {
+    if (averageRating <= 0.5) {
+      return <p className="text-green-600 font-semibold mt-1">Your symptoms are generally mild. Not urgent, but feel free to mention at your next doctor's visit.</p>;
+    } else if (averageRating <= 1.5) {
+      return <p className="text-yellow-600 font-semibold mt-1">Your symptoms are moderate on average. You may want to contact your primary care provider.</p>;
+    } else {
+      return <p className="text-red-600 font-semibold mt-1">Your symptoms are severe on average. It is strongly advised that you contact your primary care provider.</p>;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-indigo-200 via-blue-200 to-green-200 flex flex-col items-center justify-center p-6">
       <h1 className="text-4xl font-bold text-white mb-6">Symptom Tracker</h1>
@@ -210,65 +227,62 @@ const SymptomTracker = () => {
 
       {selectedSymptoms.length > 0 && (
         <div className="w-full max-w-md mt-6">
-          {selectedSymptoms.map((symptom, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg shadow-lg mb-4">
-              <h2
-                className="text-lg font-semibold cursor-pointer text-blue-600"
-                onClick={() => toggleSymptom(symptom.name || symptom)}
-              >
-                {symptom.name || symptom}
-              </h2>
-              {expandedSymptoms.includes(symptom.name || symptom) && (
-                <div>
-                  {symptom.matchingMedicines && symptom.matchingMedicines.length > 0 ? (
-                    <div>
-                      <p className="font-semibold">This may be caused by:</p>
-                      <ul className="mt-2 list-disc list-inside text-gray-700">
-                        {symptom.matchingMedicines.map((medicine, idx) => (
-                          <li key={idx}>{medicine.name}</li>
-                        ))}
-                      </ul>
+          <div className="bg-white p-4 rounded-lg shadow-lg mb-4">
+            {selectedSymptoms.map((symptom, index) => (
+              <div key={index} className="mb-4 last:mb-0">
+                <h2
+                  className="text-lg font-semibold cursor-pointer text-blue-600"
+                  onClick={() => toggleSymptom(symptom.name || symptom)}
+                >
+                  {symptom.name || symptom}
+                </h2>
+                {expandedSymptoms.includes(symptom.name || symptom) && (
+                  <div>
+                    {symptom.matchingMedicines && symptom.matchingMedicines.length > 0 ? (
+                      <div>
+                        <p className="font-semibold">This may be caused by:</p>
+                        <ul className="mt-2 list-disc list-inside text-gray-700">
+                          {symptom.matchingMedicines.map((medicine, idx) => (
+                            <li key={idx}>{medicine.name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p>No associated medicines found.</p>
+                    )}
+                    <div className="mt-4">
+                      <span className="font-semibold">Severity:</span>
+                      <div className="flex space-x-4 mt-1">
+                        <FaRegFaceMeh
+                          onClick={() => handleSeverityClick(symptom.name || symptom, 0)}
+                          className={`cursor-pointer ${severityMap[symptom.name || symptom] === 0 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                          size={24}
+                        />
+                        <FaRegFaceFrown
+                          onClick={() => handleSeverityClick(symptom.name || symptom, 1)}
+                          className={`cursor-pointer ${severityMap[symptom.name || symptom] === 1 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                          size={24}
+                        />
+                        <FaRegFaceTired
+                          onClick={() => handleSeverityClick(symptom.name || symptom, 2)}
+                          className={`cursor-pointer ${severityMap[symptom.name || symptom] === 2 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                          size={24}
+                        />
+                      </div>
                     </div>
-                  ) : (
-                    <p>No associated medicines found.</p>
-                  )}
-                  <div className="mt-4">
-                    <span className="font-semibold">Severity:</span>
-                    <div className="flex space-x-4 mt-1">
-                      <FaRegFaceMeh
-                        onClick={() => handleSeverityClick(symptom.name || symptom, 0)}
-                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 0 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-                        size={24}
-                      />
-                      <FaRegFaceFrown
-                        onClick={() => handleSeverityClick(symptom.name || symptom, 1)}
-                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 1 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-                        size={24}
-                      />
-                      <FaRegFaceTired
-                        onClick={() => handleSeverityClick(symptom.name || symptom, 2)}
-                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 2 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-                        size={24}
-                      />
-                    </div>
+                    {severityMap[symptom.name || symptom] !== undefined && (
+                      <div className="mt-2 text-gray-800">
+                        <p>
+                          Severity level: <strong>{getSeverityText(severityMap[symptom.name || symptom])}</strong>
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {severityMap[symptom.name || symptom] !== undefined && (
-                    <div className="mt-2 text-gray-800">
-                      <p>
-                        Severity level: <strong>{getSeverityText(severityMap[symptom.name || symptom])}</strong>
-                      </p>
-                      {severityMap[symptom.name || symptom] === 1 && (
-                        <p className="text-yellow-600 mt-1">You may want to contact your primary care provider.</p>
-                      )}
-                      {severityMap[symptom.name || symptom] === 2 && (
-                        <p className="text-red-600 font-bold mt-1">It is strongly advised that you contact your primary care provider.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            ))}
+            {getUrgencyMessage(getAverageRating())}
+          </div>
         </div>
       )}
 
