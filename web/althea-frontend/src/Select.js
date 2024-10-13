@@ -8,7 +8,14 @@ function Select() {
   const [drugs, setDrugs] = useState([]); 
   const [add, setAdd] = useState(0);
 
-  const handleContinue = () => {
+  const handleContinue = async() => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/medicine/name/?name=' + drugs[0].value);
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error('Error fetching medicine:', error);
+    }
     navigate('/check'); // Navigate to daily checks page
   };
 
