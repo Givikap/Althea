@@ -5,16 +5,18 @@ import PrescriptionTracker from './pages/dailychecks/dailychecks';
 import SymptomTracker from './pages/symptoms/symptomchecks';
 import LogPage from './pages/logs/logs';
 import Redirect from './useRouting';
+import { useNavigate } from 'react-router-dom';
 // import { StreakProvider } from './context/StreakContext';
 import Select from './Select';
 import './styles/fonts.css';
 import useTypewriter from './typewritehook'; // Import the custom hook
 
 function App() {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [is, setIs] = useState(false);
   const [isVisible, setIsVisible] = useState(false); // 
-  const typewriterText = "YYour prescription and medical symptom tracking companion"; // Text for typewriter effect
+  const typewriterText = "Your prescription and medical symptom tracking companion"; // Text for typewriter effect
   const displayedText = useTypewriter(typewriterText, 100); //
 
   useEffect(() => {
@@ -36,8 +38,16 @@ function App() {
       setIsVisible(true);
     }, 500); // Adjust the delay as needed
 
+    const checkLogin = async () => {
+      if (await isLogged()) {
+        navigate('/check');
+      }
+    };
+
+    checkLogin();
+
     return () => clearTimeout(timeout); // Cleanup timeout on component unmount
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     setName(e.target.value);
@@ -74,30 +84,23 @@ function App() {
 
 const getDB = async () => {
   try {
-  const response = await fetch("http://127.0.0.1:8000/api/logs/", {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  })
+    const response = await fetch("http://127.0.0.1:8000/api/logs/", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
     const data = await response.json();
     return data;
-  }
-
-  catch(e) {
+  } catch(e) {
     console.error('error', e);
+    return [];
   }
 };
 
 const isLogged = async () => {
   const type = await getDB();
-  if (type.length == 0) {
-    return false
-  }
-  
-  else {
-    return true;
-  }
+  return type.logs.length !== 0;
 };
 
 function Main() {
@@ -113,5 +116,5 @@ function Main() {
     </Router>
   );
 }
-// element={isLogged() ? <PrescriptionTracker /> : <Navigate to= "/App"} ---> where app refers to <App />, change path of <App /> then
+//element={isLogged() ? <PrescriptionTracker /> : <Navigate to= "/App"} ---> where app refers to <App />, change path of <App /> then
 export default Main;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function Select() {
@@ -7,6 +7,16 @@ function Select() {
   // State to hold drugs information
   const [drugs, setDrugs] = useState([]);
   const [add, setAdd] = useState(0);
+
+  useEffect(() => {
+    const checkLogin = async () => {
+      if (await isLogged()) {
+        navigate('/check');
+      }
+    };
+
+    checkLogin();
+  }, [navigate]);
 
   const handleContinue = async () => {
     // Filter out any empty drug entries
@@ -158,5 +168,27 @@ const addTo = () => {
     </div>
   );
 }
+
+// Add the isLogged function at the end of the file
+const getDB = async () => {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/logs/", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    const data = await response.json();
+    return data;
+  } catch(e) {
+    console.error('error', e);
+    return [];
+  }
+};
+
+const isLogged = async () => {
+  const type = await getDB();
+  return type.logs.length !== 0;
+};
 
 export default Select;
