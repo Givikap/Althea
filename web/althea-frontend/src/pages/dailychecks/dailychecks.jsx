@@ -60,7 +60,16 @@ const PrescriptionTracker = () => {
   }
   
   const handleDone = () => {
-    navigate('/symptoms'); // Navigate to symptoms page
+    // Filter checked medicines
+    const checkedMedicines = prescriptionsData
+      .filter(prescription => checkedItems[prescription.id])
+      .map(prescription => prescription.id);
+
+    // Store checked medicines in local storage
+    localStorage.setItem('medicationsToday', JSON.stringify(checkedMedicines));
+
+    // Navigate to symptoms page
+    navigate('/symptoms');
   };
 
   const handleCheckboxChange = (id) => {

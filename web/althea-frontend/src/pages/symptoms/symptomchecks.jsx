@@ -26,11 +26,27 @@ const SymptomTracker = () => {
   const [expandedSymptoms, setExpandedSymptoms] = useState([]);
   const [severityMap, setSeverityMap] = useState({});
   const [patientMedicines, setPatientMedicines] = useState([]);
+  const [checkedMedicines, setCheckedMedicines] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch patient metadata when component mounts
     fetchPatientMetadata();
+  }, []);
+
+  useEffect(() => {
+    const medicationsToday = localStorage.getItem('medicationsToday');
+    if (medicationsToday) {
+      try {
+        const parsedMedications = JSON.parse(medicationsToday);
+        setPatientMedicines(parsedMedications);
+      } catch (e) {
+        console.error("Error parsing medications from localStorage:", e);
+        setPatientMedicines([]);
+      }
+    } else {
+      setPatientMedicines([]);
+    }
   }, []);
 
   const fetchPatientMetadata = async () => {
@@ -39,13 +55,16 @@ const SymptomTracker = () => {
       if (response.ok) {
         const data = await response.json();
         console.log("Fetched patient metadata:", data);
-        // Assuming the medicine data is stored in the 'medicine' field of the metadata
         let medicines = [];
-        try {
-          medicines = JSON.parse(data.medicine);
-        } catch (e) {
-          console.error("Error parsing medicine data:", e);
-          medicines = data.medicine || []; // Use as-is if it's not JSON or default to empty array
+        if (typeof data.medicine === 'string') {
+          try {
+            medicines = JSON.parse(data.medicine);
+          } catch (e) {
+            console.error("Error parsing medicine data:", e);
+            medicines = data.medicine.split(',').map(item => item.trim());
+          }
+        } else if (Array.isArray(data.medicine)) {
+          medicines = data.medicine;
         }
         console.log("Parsed patient medicines:", medicines);
         setPatientMedicines(medicines);
@@ -57,8 +76,41 @@ const SymptomTracker = () => {
     }
   };
 
-  const handleFinish = () => {
-    navigate('/check');
+  const handleFinish = async () => {
+    try {
+      const symptoms = selectedSymptoms.map(symptom => {
+        const name = symptom.name || symptom;
+        const severity = severityMap[name] || 0;
+        const urgencyLevel = symptom.urgencyLevel || 0;
+        return [name, severity, urgencyLevel];
+      });
+
+      const requestBody = {
+        medicine_ids: patientMedicines,
+        symptoms: symptoms
+      };
+
+      console.log('Sending log data:', requestBody);
+
+      const response = await fetch('http://127.0.0.1:8000/api/log/create/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (response.ok) {
+        console.log('Log created successfully');
+        localStorage.removeItem('medicationsToday');
+        navigate('/check');
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to create log:', errorData);
+      }
+    } catch (error) {
+      console.error('Error creating log:', error);
+    }
   };
 
   const handleSearchChange = (e) => {
@@ -100,7 +152,7 @@ const SymptomTracker = () => {
       if (response.ok) {
         const data = await response.json();
         console.log("API response:", data);
-        updateSymptomWithMatchingMedicines(symptom, data.matching_medicines);
+        updateSymptomWithMatchingMedicines(symptom, data.matching_medicines, data.urgency_level);
       } else {
         const errorData = await response.json();
         console.error('Failed to check symptom medicines:', errorData);
@@ -110,22 +162,28 @@ const SymptomTracker = () => {
     }
   };
 
+  const getSeverityText = (severity) => {
+    switch (severity) {
+      case 0: return 'Mild';
+      case 1: return 'Moderate';
+      case 2: return 'Severe';
+      default: return 'Mild';
+    }
+  };
+
   const handleSeverityClick = async (symptom, severity) => {
     setSeverityMap((prev) => ({
       ...prev,
       [symptom]: severity
     }));
 
-    // Convert severity to patient_rating
-    const patientRating = severity === 'Mild' ? 0 : severity === 'Moderate' ? 1 : 2;
-
-    await checkSymptomMedicines(symptom, patientRating);
+    await checkSymptomMedicines(symptom, severity);
   };
 
-  const updateSymptomWithMatchingMedicines = (symptom, matchingMedicines) => {
+  const updateSymptomWithMatchingMedicines = (symptom, matchingMedicines, urgencyLevel) => {
     setSelectedSymptoms(prevSymptoms => 
       prevSymptoms.map(s => 
-        s === symptom ? { name: s, matchingMedicines } : s
+        s === symptom ? { name: s, matchingMedicines, urgencyLevel } : s
       )
     );
   };
@@ -178,31 +236,31 @@ const SymptomTracker = () => {
                     <span className="font-semibold">Severity:</span>
                     <div className="flex space-x-4 mt-1">
                       <FaRegFaceMeh
-                        onClick={() => handleSeverityClick(symptom.name || symptom, 'Mild')}
-                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 'Mild' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        onClick={() => handleSeverityClick(symptom.name || symptom, 0)}
+                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 0 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
                         size={24}
                       />
                       <FaRegFaceFrown
-                        onClick={() => handleSeverityClick(symptom.name || symptom, 'Moderate')}
-                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 'Moderate' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        onClick={() => handleSeverityClick(symptom.name || symptom, 1)}
+                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 1 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
                         size={24}
                       />
                       <FaRegFaceTired
-                        onClick={() => handleSeverityClick(symptom.name || symptom, 'Severe')}
-                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 'Severe' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        onClick={() => handleSeverityClick(symptom.name || symptom, 2)}
+                        className={`cursor-pointer ${severityMap[symptom.name || symptom] === 2 ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
                         size={24}
                       />
                     </div>
                   </div>
-                  {severityMap[symptom.name || symptom] && (
+                  {severityMap[symptom.name || symptom] !== undefined && (
                     <div className="mt-2 text-gray-800">
                       <p>
-                        Severity level: <strong>{severityMap[symptom.name || symptom]}</strong>
+                        Severity level: <strong>{getSeverityText(severityMap[symptom.name || symptom])}</strong>
                       </p>
-                      {(severityMap[symptom.name || symptom] === 'Moderate') && (
+                      {severityMap[symptom.name || symptom] === 1 && (
                         <p className="text-yellow-600 mt-1">You may want to contact your primary care provider.</p>
                       )}
-                      {(severityMap[symptom.name || symptom] === 'Severe') && (
+                      {severityMap[symptom.name || symptom] === 2 && (
                         <p className="text-red-600 font-bold mt-1">It is strongly advised that you contact your primary care provider.</p>
                       )}
                     </div>
