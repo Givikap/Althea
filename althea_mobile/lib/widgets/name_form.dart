@@ -47,7 +47,7 @@ class _NameFormState extends State<NameForm> {
             child: ElevatedButton(
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
-                  _setName();
+                  await _setName();
 
                   Navigator.pushReplacement(
                       context,

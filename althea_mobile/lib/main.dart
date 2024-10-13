@@ -5,9 +5,11 @@ import 'screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(ChangeNotifierProvider(
-    create: (context) => DatabaseApi(),
-    child: const App(),
+  runApp(MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => DatabaseApi()..loadPrescriptions()),
+      ],
+      child: const App(),
   ));
 }
 

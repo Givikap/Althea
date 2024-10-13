@@ -26,7 +26,8 @@ class _PrescriptionFormState extends State<PrescriptionForm> {
         interval: _selectedInterval ?? 'Once a day',
       );
 
-      DatabaseApi().insertPrescription(prescription);
+      DatabaseApi().addPrescription(prescription);
+      await DatabaseApi().insertPrescription(prescription);
 
       _formKey.currentState?.reset();
       _nameController.clear();
@@ -37,8 +38,6 @@ class _PrescriptionFormState extends State<PrescriptionForm> {
         _selectedInterval = null;
       });
     }
-    // await DatabaseApi().deletePrescription('Ibuprofen');
-    print(await DatabaseApi().queryAllPrescription());
   }
 
   @override
