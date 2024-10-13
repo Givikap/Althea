@@ -42,19 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
-    'django_extensions',
-    'rest_framework',
-    'backend.apps.BackendConfig',
-=======
-<<<<<<< HEAD:web/althea-backend/mysite/settings.py
     'corsheaders',
-=======
     'django_extensions',
     'rest_framework',
     'backend.apps.BackendConfig',
->>>>>>> 7f5c3fa (adding backend files):web/althea-frontend/althea-backend/mysite/settings.py
->>>>>>> homePage
+
 ]
 
 MIDDLEWARE = [
@@ -149,16 +141,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD:web/althea-backend/mysite/settings.py
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-=======
->>>>>>> homePage
+
 DATABASE_ROUTERS = ['mysite.routers.MedicineRouter']
 
 REST_FRAMEWORK = {
@@ -169,7 +157,5 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     ],
 }
-<<<<<<< HEAD
-=======
->>>>>>> 7f5c3fa (adding backend files):web/althea-frontend/althea-backend/mysite/settings.py
->>>>>>> homePage
+
+

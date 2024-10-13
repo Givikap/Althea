@@ -15,17 +15,48 @@ function Select() {
     // Create medicines in the backend
     for (const drug of validDrugs) {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/medicine/create/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name: drug.value.trim() }),
-        });
-
+        // check if medicine already exists
+        const response = await fetch('http://127.0.0.1:8000/api/medicine/name/?name=' + drug.value.trim());
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          // if medicine does not exist, create it
+          response = await fetch('http://127.0.0.1:8000/api/medicine/create/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: drug.value.trim() }),
+          });
+          
+          // if not successful, throw an error
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
         }
+        // if medicine exists
+        {
+           response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/`)
+           if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+           }
+           data = await response.json();
+           data.push(drug.value.trim());
+           response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/update/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ medicines: data }),
+           });
+           if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+           }
+        }
+        
+        
+        
+
+        
 
         const data = await response.json();
         console.log(`Medicine created: ${data.id}`);
