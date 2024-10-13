@@ -113,5 +113,5 @@ function Main() {
     </Router>
   );
 }
-
+// element={isLogged() ? <PrescriptionTracker /> : <Navigate to= "/App"} ---> where app refers to <App />, change path of <App /> then
 export default Main;
