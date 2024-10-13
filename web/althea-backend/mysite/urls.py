@@ -52,4 +52,5 @@ urlpatterns = [
     path('api/contact/name/', views.get_contact_by_name, name='get_contact_by_name'),
     # Input: /api/patient/check-symptom-medicines/ (returns all fields)
     path('api/patient/check-symptom-medicines/', views.check_symptom_medicines, name='check_symptom_medicines'),
+    path('api/patient/name/update/', views.update_patient_name, name='update_patient_name'),
 ]

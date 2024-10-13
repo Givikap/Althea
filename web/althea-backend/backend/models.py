@@ -44,6 +44,7 @@ class PatientMetadata(models.Model):
     medicine = models.ManyToManyField(Medicine)
     streak_count = models.IntegerField(default=0)
     last_logged_in = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
     
     class Meta:
         db_table = 'patient_metadata'
