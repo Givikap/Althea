@@ -20,11 +20,22 @@ def get_medicine_by_name(request):
 @require_http_methods(["GET"])
 def get_medicine_by_guid(request, guid):
     medicine = get_object_or_404(Medicine, id=guid)
+    
+    # Get the patient metadata
+    patient_metadata = PatientMetadata.objects.first()
+    
+    # Parse the medicine field from text to list
+    patient_medicines = json.loads(patient_metadata.medicine) if patient_metadata else []
+    
+    # Check if the current medicine is in the patient's medicines
+    is_patient_medicine = str(medicine.id) in patient_medicines
+    
     return JsonResponse({
         'id': str(medicine.id),
         'name': medicine.name,
         'symptoms': medicine.symptoms,
-        'last_updated': medicine.last_updated
+        'last_updated': medicine.last_updated,
+        'is_patient_medicine': is_patient_medicine
     })
 
 @csrf_exempt
@@ -151,10 +162,9 @@ def get_logs_by_date_range(request):
 def get_patient_medicines(request):
     patient_metadata = PatientMetadata.objects.first()
     if patient_metadata and patient_metadata.medicine:
-        with connections['medicine'].cursor() as cursor:
-            cursor.execute("SELECT id, name FROM medicine WHERE id = ANY(%s)", [patient_metadata.medicine])
-            medicines = [{'id': str(row[0]), 'name': row[1]} for row in cursor.fetchall()]
-        return JsonResponse({'medicines': medicines})
+        medicine_ids = json.loads(patient_metadata.medicine)
+        medicines = Medicine.objects.filter(id__in=medicine_ids).values('id', 'name')
+        return JsonResponse({'medicines': list(medicines)})
     return JsonResponse({'medicines': []})
 
 @csrf_exempt
@@ -162,7 +172,8 @@ def get_patient_medicines(request):
 def update_patient_medicines(request):
     data = json.loads(request.body)
     patient_metadata = PatientMetadata.objects.first()
-    patient_metadata.medicine.set(Medicine.objects.filter(id__in=data['medicine']))
+    patient_metadata.medicine = json.dumps(data['medicine'])
+    patient_metadata.save()
     return JsonResponse({'success': True})
 
 @require_http_methods(["GET"])
@@ -224,19 +235,17 @@ def patient_metadata(request):
                 'streak_count': patient_metadata.streak_count,
                 'last_logged_in': patient_metadata.last_logged_in.isoformat(),
                 'name': patient_metadata.name,
-                'medicine': patient_metadata.medicine
+                'medicine': json.loads(patient_metadata.medicine)
             }
             return JsonResponse(metadata)
         return JsonResponse({'error': 'No patient metadata found'}, status=404)
     
     elif request.method in ["POST", "PUT"]:
         data = json.loads(request.body)
-        patient_metadata, created = PatientMetadata.objects.get_or_create(pk=PatientMetadata._meta.pk.default())
+        patient_metadata, created = PatientMetadata.objects.get_or_create(pk=1)
         
         if 'medicine' in data:
-            medicine_ids = data['medicine']
-            existing_medicines = Medicine.objects.filter(id__in=medicine_ids)
-            patient_metadata.medicine.set(existing_medicines)
+            patient_metadata.medicine = json.dumps(data['medicine'])
         
         for field in ['streak_count', 'name']:
             if field in data:
@@ -252,7 +261,7 @@ def patient_metadata(request):
             'streak_count': patient_metadata.streak_count,
             'last_logged_in': patient_metadata.last_logged_in.isoformat() if patient_metadata.last_logged_in else None,
             'name': patient_metadata.name,
-            'medicine': [{'id': str(m.id), 'name': m.name} for m in patient_metadata.medicine.all()]
+            'medicine': json.loads(patient_metadata.medicine)
         }
         
         return JsonResponse(response_data)
