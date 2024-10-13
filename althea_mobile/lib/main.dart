@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import 'api/database_api.dart';
 import 'screens/splash_screen.dart';
 
 void main() {
-  runApp(const App());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(ChangeNotifierProvider(
+    create: (context) => DatabaseApi(),
+    child: const App(),
+  ));
 }
 
 class App extends StatelessWidget {

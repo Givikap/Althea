@@ -20,8 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkSetupStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isSetupComplete = prefs.getBool('isSetupComplete') ?? false;
-    isSetupComplete = false;
+    bool isSetupComplete = prefs.getBool('isWelcomeComplete') ?? false;
 
     if (isSetupComplete) {
       Navigator.of(context).pushReplacement(
