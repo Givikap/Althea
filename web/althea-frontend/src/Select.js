@@ -8,25 +8,76 @@ function Select() {
   const [drugs, setDrugs] = useState([]); 
   const [add, setAdd] = useState(0);
 
-  const handleContinue = () => {
-    navigate('/check'); // Navigate to daily checks page
+  const getSymptoms = async (medicine) => {
+      console.log("hi")
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/medicine/create/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: medicine}),
+      })
+          if (response.ok) {
+              console.log('success!');
+          }
+
+          
+      }
+      catch(e) {
+        console.error('error', e);
+    }
+  }
+
+
+  const handleContinue = async () => {
+      console.log(drugs.length())
+      for (let i = 0; i < drugs.length; i++){
+        await getSymptoms(drugs[i])
+      }
+      navigate('/check'); 
+
   };
 
-  const addTo = () => {
+//   const addTo = () => {
+//     if (add < 10) {
+//       // Add a new input field with an empty value
+//       setDrugs([...drugs, { id: add, value: '' }]);
+//       setAdd(add + 1);
+//       console.log(drugs);
+//     }
+//   };
+
+//   const subTo = () => {
+//     if (add > 0) {
+//       // Remove the last input field
+//       setDrugs(drugs.slice(0, -1));
+//       setAdd(add - 1);
+//       console.log(drugs);
+//     }
+//   };
+
+const addTo = () => {
     if (add < 10) {
       // Add a new input field with an empty value
-      setDrugs([...drugs, { id: add, value: '' }]);
+      setDrugs(prevDrugs => {
+        const newDrugs = [...prevDrugs, { id: add, value: '' }];
+        console.log(newDrugs); // Log updated drugs here
+        return newDrugs;
+      });
       setAdd(add + 1);
-      console.log(drugs);
     }
   };
-
+  
   const subTo = () => {
     if (add > 0) {
       // Remove the last input field
-      setDrugs(drugs.slice(0, -1));
+      setDrugs(prevDrugs => {
+        const updatedDrugs = prevDrugs.slice(0, -1);
+        console.log(updatedDrugs); // Log updated drugs here
+        return updatedDrugs;
+      });
       setAdd(add - 1);
-      console.log(drugs);
     }
   };
 

@@ -73,11 +73,39 @@ function App() {
   );
 }
 
+const getDB = async () => {
+  try {
+  const response = await fetch("http://127.0.0.1:8000/api/logs/", {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
+    const data = await response.json();
+    return data;
+  }
+
+  catch(e) {
+    console.error('error', e);
+  }
+};
+
+const isLogged = async () => {
+  const type = await getDB();
+  if (type.length == 0) {
+    return false
+  }
+  
+  else {
+    return true;
+  }
+};
+
 function Main() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<App />} />  
+        <Route path="/" element={<App />} />
         <Route path="/select" element={<Select />} />
         <Route path="/check" element={<PrescriptionTracker />} />
         <Route path="/symptoms" element={<SymptomTracker />} />
