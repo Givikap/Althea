@@ -261,3 +261,18 @@ def check_symptom_medicines(request):
 
     print(f"Matching medicines: {matching_medicines}")
     return JsonResponse({'matching_medicines': matching_medicines})
+
+@csrf_exempt
+@require_http_methods(["POST", "PUT"])
+def update_patient_name(request):
+    data = json.loads(request.body)
+    name = data.get('name')
+    
+    if not name:
+        return JsonResponse({'error': 'Name is required'}, status=400)
+    
+    patient_metadata, created = PatientMetadata.objects.get_or_create(id=1)
+    patient_metadata.name = name
+    patient_metadata.save()
+    
+    return JsonResponse({'success': True, 'name': name})
