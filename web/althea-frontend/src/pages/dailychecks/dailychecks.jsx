@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PiListHeart } from "react-icons/pi"; // Import the icon
 
 const PrescriptionTracker = () => {
   const navigate = useNavigate();
@@ -24,6 +25,10 @@ const PrescriptionTracker = () => {
     { id: 6, name: 'Simvastatin' },
   ];
 
+  const handleLogs = () => {
+    navigate('/logs');
+  }
+  
   const handleDone = () => {
     navigate('/symptoms'); // Navigate to symptoms page
   };
@@ -57,12 +62,20 @@ const PrescriptionTracker = () => {
           ))}
         </div>
       </div>
-      <button 
-        onClick={handleDone} 
-        className="mt-4 bg-[#24698E] hover:bg-[#000000] text-white font-semibold py-2 px-4 border-blue rounded shadow transition duration-200"
-      >
-        Next
-      </button>
+      <div className="flex mt-4 space-x-4">
+        <button 
+          onClick={handleDone} 
+          className="bg-[#24698E] hover:bg-[#000000] text-white font-semibold py-2 px-4 border-blue rounded shadow transition duration-200"
+        >
+          Next
+        </button>
+        <button 
+          onClick={handleLogs} 
+          className="text-white"
+        >
+          <PiListHeart size={24} className="mr-2 text-2xl" />
+        </button>
+      </div>
     </div>
   );
 };
