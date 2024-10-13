@@ -5,57 +5,80 @@ function Select() {
   const navigate = useNavigate();
   
   // State to hold drugs information
-  const [drugs, setDrugs] = useState([]); 
+  const [drugs, setDrugs] = useState([]);
   const [add, setAdd] = useState(0);
 
-  const getSymptoms = async (medicine) => {
-      console.log("hi")
-      try {
-        const response = await fetch(`http://127.0.0.1:8000/api/medicine/create/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name: medicine}),
-      })
-          if (response.ok) {
-              console.log('success!');
-          }
-
-          
-      }
-      catch(e) {
-        console.error('error', e);
-    }
-  }
-
-
   const handleContinue = async () => {
-      console.log(drugs.length())
-      for (let i = 0; i < drugs.length; i++){
-        await getSymptoms(drugs[i])
+    // Filter out any empty drug entries
+    const validDrugs = drugs.filter(drug => drug.value.trim() !== '');
+
+    // Create medicines in the backend
+    for (const drug of validDrugs) {
+      try {
+        // check if medicine already exists
+        let response = await fetch('http://127.0.0.1:8000/api/medicine/name/?name=' + drug.value.trim());
+        let data;
+
+        if (!response.ok) {
+          // if medicine does not exist, create it
+          response = await fetch('http://127.0.0.1:8000/api/medicine/create/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: drug.value.trim() }),
+          });
+          
+          // if not successful, throw an error
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          console.log(`Medicine created: ${data.id}`);
+        } else {
+          // if medicine exists
+          response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          console.log(data);
+          let updatedMedicines = Array.isArray(data.medicines) ? [...data.medicines] : [];
+
+          response = await fetch(`http://127.0.0.1:8000/api/medicine/name/?name=${encodeURIComponent(drug.value.trim())}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          // Add the new medicine ID if it's not already in the list
+          if (!updatedMedicines.some(medicine => medicine.id === data.id)) {
+            updatedMedicines.push(data.id);
+          }
+          
+          console.log(updatedMedicines);
+          
+          response = await fetch(`http://127.0.0.1:8000/api/patient/medicines/update/`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ medicine: updatedMedicines.map(med => typeof med === 'string' ? med : med.id) }),
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          data = await response.json();
+          console.log(`Medicine updated: ${data.success}`);
+        }
+      } catch (error) {
+        console.error(`Error processing medicine: ${drug.value}`, error);
+        // You might want to handle this error, perhaps by showing a message to the user
       }
-      navigate('/check'); 
+    }
 
+    // After creating all medicines, navigate to the daily checks page
+    navigate('/check');
   };
-
-//   const addTo = () => {
-//     if (add < 10) {
-//       // Add a new input field with an empty value
-//       setDrugs([...drugs, { id: add, value: '' }]);
-//       setAdd(add + 1);
-//       console.log(drugs);
-//     }
-//   };
-
-//   const subTo = () => {
-//     if (add > 0) {
-//       // Remove the last input field
-//       setDrugs(drugs.slice(0, -1));
-//       setAdd(add - 1);
-//       console.log(drugs);
-//     }
-//   };
 
 const addTo = () => {
     if (add < 10) {
@@ -92,20 +115,19 @@ const addTo = () => {
     <div className="min-h-screen bg-gradient-to-r from-indigo-200 via-blue-200 to-green-200 text-white flex justify-center items-center">
       <div className="flex flex-col justify-center items-start px-6">
         <header className="text-4xl font-bold text-center mb-6">
-          What Drugs do You Normally Take, {localStorage.getItem('inputName')}?
+          What drugs do you normally take, {localStorage.getItem('inputName')}?
         </header>
-        <p className="text-white font-bold mb-4">lorem ipsum foo bar</p>
 
         {/* Buttons container */}
         <div className="flex space-x-4 mb-4">
           <button
-            className="bg-white text-[#3D9991] font-bold py-2 px-4 rounded transition duration-300 hover:bg-purple-500 hover:text-black shadow-lg"
+            className="bg-[#24698E] text-white font-bold py-2 px-4 rounded transition duration-300 hover:bg-purple-500 hover:text-black shadow-lg"
             onClick={addTo}
           >
             +
           </button>
           <button
-            className="bg-purple-500 text-black font-bold py-2 px-4 rounded transition duration-300 hover:bg-white hover:text-purple-500 shadow-lg"
+            className="bg-[#24698E] text-white font-bold py-2 px-4 rounded transition duration-300 hover:bg-white hover:text-purple-500 shadow-lg"
             onClick={subTo}
           >
             -

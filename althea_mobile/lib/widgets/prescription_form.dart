@@ -1,20 +1,6 @@
+import 'package:althea_mobile/api/database_api.dart';
+import 'package:althea_mobile/classes/prescription.dart';
 import 'package:flutter/material.dart';
-
-class Medication {
-  final String name;
-  final String dosage;
-  final int timesPerInterval;
-  final String interval;
-  final DateTime? endOfRepeatDate;
-
-  Medication({
-    required this.name,
-    required this.dosage,
-    required this.timesPerInterval,
-    required this.interval,
-    this.endOfRepeatDate,
-  });
-}
 
 class PrescriptionForm extends StatefulWidget {
   const PrescriptionForm({super.key});
@@ -28,47 +14,31 @@ class _PrescriptionFormState extends State<PrescriptionForm> {
   final _nameController = TextEditingController();
   final _dosageController = TextEditingController();
   final _timesController = TextEditingController();
-  String? _selectedInterval;
-  DateTime? _endRepeatDate;
 
-  void _submitForm() {
+  String? _selectedInterval;
+
+  Future<void> _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Create a Medication object
-      Medication medication = Medication(
+      Prescription prescription = Prescription(
         name: _nameController.text,
         dosage: _dosageController.text,
         timesPerInterval: int.parse(_timesController.text),
-        interval: _selectedInterval ?? 'Once a day', // Default to once a day
-        endOfRepeatDate: _endRepeatDate,
+        interval: _selectedInterval ?? 'Once a day',
       );
 
-      // Do something with the medication object (e.g., save it)
-      print('Medication: ${medication.name}, Dosage: ${medication.dosage}, Times: ${medication.timesPerInterval}, Interval: ${medication.interval}, End Date: ${medication.endOfRepeatDate}');
+      DatabaseApi().insertPrescription(prescription);
 
-      // Optionally clear the form
       _formKey.currentState?.reset();
       _nameController.clear();
       _dosageController.clear();
       _timesController.clear();
+
       setState(() {
         _selectedInterval = null;
-        _endRepeatDate = null;
       });
     }
-  }
-
-  Future<void> _selectEndRepeatDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _endRepeatDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != _endRepeatDate) {
-      setState(() {
-        _endRepeatDate = picked;
-      });
-    }
+    // await DatabaseApi().deletePrescription('Ibuprofen');
+    print(await DatabaseApi().queryAllPrescription());
   }
 
   @override
@@ -79,10 +49,20 @@ class _PrescriptionFormState extends State<PrescriptionForm> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              const Text(
+                'Add a new prescription',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple
+                ),
+              ),
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Medication Name'),
+                decoration: getInputDecorator('Medication'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the medication name';
@@ -92,7 +72,7 @@ class _PrescriptionFormState extends State<PrescriptionForm> {
               ),
               TextFormField(
                 controller: _dosageController,
-                decoration: InputDecoration(labelText: 'Dosage (as a string)'),
+                decoration: getInputDecorator('Dosage'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the dosage';
@@ -100,52 +80,75 @@ class _PrescriptionFormState extends State<PrescriptionForm> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _timesController,
-                decoration: InputDecoration(labelText: 'Times per interval (number only)'),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the times per interval';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(labelText: 'Interval'),
-                value: _selectedInterval,
-                items: <String>['Once a day', 'Once a week', 'Once a month']
-                    .map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedInterval = newValue;
-                  });
-                },
-              ),
               Row(
                 children: [
-                  Text(
-                    _endRepeatDate == null
-                        ? 'No end date selected'
-                        : 'End of Repeat Date: ${_endRepeatDate!.toLocal()}'.split(' ')[0],
+                  Expanded(
+                    child: TextFormField(
+                      controller: _timesController,
+                      decoration: getInputDecorator('Times'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the number';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () => _selectEndRepeatDate(context),
-                    child: const Text('Select Date'),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(20.0, 25.0, 20.0, 10.0),
+                    child: Text('per',
+                    style: TextStyle(color: Colors.deepPurple),),
+                  ),
+                  Expanded(child:
+                    DropdownButtonFormField<String>(
+                      decoration: getInputDecorator('Interval'),
+                      value: _selectedInterval,
+                      items: <String>['day', 'week', 'month'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedInterval = newValue;
+                        });
+                      },
+                    ),
                   ),
                 ],
               ),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Add prescription'),
+              // const SizedBox(height: 20.0),
+              // InputDatePickerFormField(
+              //   firstDate: DateTime(1900),
+              //   lastDate: DateTime(2100),
+              //   initialDate: DateTime.now(),
+              //   fieldHintText: 'Select end of repeat date',
+              //   onDateSubmitted: (date) {
+              //     setState(() {
+              //       _endRepeatDate = date;
+              //     });
+              //   },
+              //   onDateSaved: (date) {
+              //     _endRepeatDate = date;
+              //   },
+              // ),
+              const SizedBox(height: 20.0),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submitForm,
+
+                  style: const ButtonStyle(backgroundColor: WidgetStatePropertyAll<Color>(Color(0xFF3D9991))),
+                  child: const Text(
+                    'Add prescription',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -153,4 +156,19 @@ class _PrescriptionFormState extends State<PrescriptionForm> {
       ),
     );
   }
+}
+
+InputDecoration getInputDecorator(String labelText) {
+  return InputDecoration(
+    labelText: labelText,
+    labelStyle: const TextStyle(
+      color: Colors.deepPurple
+    ),
+    border: const UnderlineInputBorder(
+      borderSide: BorderSide(color: Colors.deepPurple),
+    ),
+    enabledBorder: const UnderlineInputBorder(
+      borderSide: BorderSide(color: Colors.deepPurple),
+    ),
+  );
 }

@@ -29,28 +29,7 @@ class _NameFormState extends State<NameForm> {
         children: [
           TextFormField(
             controller: _nameController,
-            decoration: InputDecoration(
-              hintText: 'Enter your name',
-              hintStyle: const TextStyle(
-                color: Colors.white,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: const BorderSide(color: Colors.deepPurple, width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: const BorderSide(color: Colors.deepPurple, width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: const BorderSide(color: Colors.deepPurple, width: 1.0),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: const BorderSide(color: Colors.deepPurple, width: 1.0),
-              ),
-            ),
+            decoration: getInputDecorator('Enter your name'),
             validator: (String? value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your name';
@@ -89,4 +68,21 @@ class _NameFormState extends State<NameForm> {
       ),
     );
   }
+}
+
+InputDecoration getInputDecorator(String hintText) {
+  return InputDecoration(
+    labelText: hintText,
+    labelStyle: const TextStyle(
+      color: Colors.white,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10.0),
+      borderSide: const BorderSide(color: Colors.deepPurple, width: 1.0),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10.0),
+      borderSide: const BorderSide(color: Colors.deepPurple, width: 1.0),
+    ),
+  );
 }

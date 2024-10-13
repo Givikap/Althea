@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaRegFaceMeh, FaRegFaceFrown, FaRegFaceTired } from "react-icons/fa6";
 
 const symptomList = [
   'Headache', 'Cough', 'Fever', 'Sore throat', 'Fatigue', 'Nausea',
@@ -23,6 +24,7 @@ const SymptomTracker = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [expandedSymptoms, setExpandedSymptoms] = useState([]);
+  const [severityMap, setSeverityMap] = useState({});
   const navigate = useNavigate();
 
   const handleFinish = () => {
@@ -34,9 +36,11 @@ const SymptomTracker = () => {
   };
 
   const handleAddSymptom = () => {
-    const formattedSearchTerm = searchTerm.trim();
-    if (symptomList.includes(formattedSearchTerm) && !selectedSymptoms.includes(formattedSearchTerm)) {
-      setSelectedSymptoms([...selectedSymptoms, formattedSearchTerm]);
+    const formattedSearchTerm = searchTerm.trim().toLowerCase();
+    const matchingSymptom = symptomList.find(symptom => symptom.toLowerCase() === formattedSearchTerm);
+
+    if (matchingSymptom && !selectedSymptoms.includes(matchingSymptom)) {
+      setSelectedSymptoms([...selectedSymptoms, matchingSymptom]);
       setSearchTerm(''); // Clear the input field
     }
   };
@@ -47,6 +51,13 @@ const SymptomTracker = () => {
         ? prev.filter((item) => item !== symptom)
         : [...prev, symptom]
     );
+  };
+
+  const handleSeverityClick = (symptom, severity) => {
+    setSeverityMap((prev) => ({
+      ...prev,
+      [symptom]: severity
+    }));
   };
 
   return (
@@ -80,15 +91,51 @@ const SymptomTracker = () => {
                 {symptom}
               </h2>
               {expandedSymptoms.includes(symptom) && (
-                <ul className="mt-2 list-disc list-inside text-gray-700">
-                  {symptomDrugMap[symptom] ? (
-                    symptomDrugMap[symptom].map((drug, idx) => (
-                      <li key={idx}>{drug}</li>
-                    ))
-                  ) : (
-                    <li>No associated drugs found.</li>
+                <div>
+                  <p className="font-semibold">This may be caused by:</p> {/* Added text */}
+                  <ul className="mt-2 list-disc list-inside text-gray-700">
+                    {symptomDrugMap[symptom] ? (
+                      symptomDrugMap[symptom].map((drug, idx) => (
+                        <li key={idx}>{drug}</li>
+                      ))
+                    ) : (
+                      <li>No associated drugs found.</li>
+                    )}
+                  </ul>
+                  <div className="mt-4">
+                    <span className="font-semibold">Severity:</span>
+                    <div className="flex space-x-4 mt-1">
+                      <FaRegFaceMeh
+                        onClick={() => handleSeverityClick(symptom, 'Mild')}
+                        className={`cursor-pointer ${severityMap[symptom] === 'Mild' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        size={24}
+                      />
+                      <FaRegFaceFrown
+                        onClick={() => handleSeverityClick(symptom, 'Moderate')}
+                        className={`cursor-pointer ${severityMap[symptom] === 'Moderate' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        size={24}
+                      />
+                      <FaRegFaceTired
+                        onClick={() => handleSeverityClick(symptom, 'Severe')}
+                        className={`cursor-pointer ${severityMap[symptom] === 'Severe' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        size={24}
+                      />
+                    </div>
+                  </div>
+                  {severityMap[symptom] && (
+                    <div className="mt-2 text-gray-800">
+                      <p>
+                        Severity level: <strong>{severityMap[symptom]}</strong>
+                      </p>
+                      {(severityMap[symptom] === 'Moderate') && (
+                        <p className="text-yellow-600 mt-1">You may want to contact your primary care provider.</p>
+                      )}
+                      {(severityMap[symptom] === 'Severe') && (
+                        <p className="text-red-600 font-bold mt-1">It is strongly advised that you contact your primary care provider.</p>
+                      )}
+                    </div>
                   )}
-                </ul>
+                </div>
               )}
             </div>
           ))}

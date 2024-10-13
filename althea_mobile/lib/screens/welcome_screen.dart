@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/name_from.dart';
+import '../widgets/name_form.dart';
 
 class SetupScreen extends StatelessWidget {
   const SetupScreen({super.key});

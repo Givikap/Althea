@@ -5,6 +5,7 @@ import PrescriptionTracker from './pages/dailychecks/dailychecks';
 import SymptomTracker from './pages/symptoms/symptomchecks';
 import LogPage from './pages/logs/logs';
 import Redirect from './useRouting';
+// import { StreakProvider } from './context/StreakContext';
 import Select from './Select';
 import './styles/fonts.css';
 import useTypewriter from './typewritehook'; // Import the custom hook
@@ -13,7 +14,7 @@ function App() {
   const [name, setName] = useState('');
   const [is, setIs] = useState(false);
   const [isVisible, setIsVisible] = useState(false); // 
-  const typewriterText = "Yoour prescription and medical symptom tracking companion"; // Text for typewriter effect
+  const typewriterText = "YYour prescription and medical symptom tracking companion"; // Text for typewriter effect
   const displayedText = useTypewriter(typewriterText, 100); //
 
   useEffect(() => {
@@ -47,9 +48,7 @@ function App() {
       <header className="text-6xl font-Ubuntu text-center mb-6">
         Welcome to
       </header>
-      <div className="text-5xl font-sinera text-center mb-4">
-        Althea
-      </div>
+      <div className="text-5xl font-Spirly text-center mb-4">Althea</div>
       <TbMedicineSyrup size={60} color="#FFFFFF" />
       {/* Typewriter Text */}
       <div className="text-lg text-center mt-2">{displayedText}</div> {/* Displaying the typewriter text */}

@@ -20,11 +20,22 @@ def get_medicine_by_name(request):
 @require_http_methods(["GET"])
 def get_medicine_by_guid(request, guid):
     medicine = get_object_or_404(Medicine, id=guid)
+    
+    # Get the patient metadata
+    patient_metadata = PatientMetadata.objects.first()
+    
+    # Parse the medicine field from text to list
+    patient_medicines = json.loads(patient_metadata.medicine) if patient_metadata else []
+    
+    # Check if the current medicine is in the patient's medicines
+    is_patient_medicine = str(medicine.id) in patient_medicines
+    
     return JsonResponse({
         'id': str(medicine.id),
         'name': medicine.name,
         'symptoms': medicine.symptoms,
-        'last_updated': medicine.last_updated
+        'last_updated': medicine.last_updated,
+        'is_patient_medicine': is_patient_medicine
     })
 
 @csrf_exempt
@@ -150,20 +161,23 @@ def get_logs_by_date_range(request):
 @require_http_methods(["GET"])
 def get_patient_medicines(request):
     patient_metadata = PatientMetadata.objects.first()
-    if patient_metadata and patient_metadata.medicine_ids:
-        with connections['medicine'].cursor() as cursor:
-            cursor.execute("SELECT id, name FROM medicine WHERE id = ANY(%s)", [patient_metadata.medicine_ids])
-            medicines = [{'id': str(row[0]), 'name': row[1]} for row in cursor.fetchall()]
-        return JsonResponse({'medicines': medicines})
+    if patient_metadata and patient_metadata.medicine:
+        medicine_ids = json.loads(patient_metadata.medicine)
+        medicines = Medicine.objects.filter(id__in=medicine_ids).values('id', 'name')
+        return JsonResponse({'medicines': list(medicines)})
     return JsonResponse({'medicines': []})
 
 @csrf_exempt
 @require_http_methods(["PUT"])
 def update_patient_medicines(request):
     data = json.loads(request.body)
-    patient_metadata = PatientMetadata.objects.first()
-    patient_metadata.medicine.set(Medicine.objects.filter(id__in=data['medicine_ids']))
-    return JsonResponse({'success': True})
+    patient_metadata, created = PatientMetadata.objects.get_or_create(defaults={'medicine': '[]'})
+    if 'medicine' in data:
+        patient_metadata.medicine = json.dumps(data['medicine'])
+        patient_metadata.save()
+        return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'error': 'No medicine data provided'}, status=400)
 
 @require_http_methods(["GET"])
 def get_last_logged_in(request):
@@ -213,15 +227,51 @@ def get_contact_by_name(request):
         'phone_number': contact.phone_number
     })
 
-@require_http_methods(["GET"])
-def get_patient_metadata(request):
-    patient_metadata = PatientMetadata.objects.first()
-    if patient_metadata:
-        data = model_to_dict(patient_metadata)
-        data['id'] = str(data['id'])  # Convert UUID to string
-        data['medicine'] = [str(m.id) for m in patient_metadata.medicine.all()]
-        return JsonResponse(data)
-    return JsonResponse({'error': 'No patient metadata found'}, status=404)
+@csrf_exempt
+@require_http_methods(["GET", "POST", "PUT"])
+def patient_metadata(request):
+    if request.method == "GET":
+        patient_metadata = PatientMetadata.objects.first()
+        if patient_metadata:
+            metadata = {
+                'id': str(patient_metadata.id),
+                'streak_count': patient_metadata.streak_count,
+                'last_logged_in': patient_metadata.last_logged_in.isoformat(),
+                'name': patient_metadata.name,
+                'medicine': json.loads(patient_metadata.medicine)
+            }
+            return JsonResponse(metadata)
+        return JsonResponse({'error': 'No patient metadata found'}, status=404)
+    
+    elif request.method in ["POST", "PUT"]:
+        data = json.loads(request.body)
+        patient_metadata, created = PatientMetadata.objects.get_or_create(pk=1)
+        
+        if 'medicine' in data:
+            patient_metadata.medicine = json.dumps(data['medicine'])
+        
+        for field in ['streak_count', 'name']:
+            if field in data:
+                setattr(patient_metadata, field, data[field])
+        
+        if request.method == "POST":
+            patient_metadata.last_logged_in = timezone.now()
+        
+        patient_metadata.save()
+        
+        response_data = {
+            'id': str(patient_metadata.id),
+            'streak_count': patient_metadata.streak_count,
+            'last_logged_in': patient_metadata.last_logged_in.isoformat() if patient_metadata.last_logged_in else None,
+            'name': patient_metadata.name,
+            'medicine': json.loads(patient_metadata.medicine)
+        }
+        
+        return JsonResponse(response_data)
+
+    else:
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
 
 @csrf_exempt
 @require_http_methods(["POST"])

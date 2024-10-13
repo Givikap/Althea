@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/prescription_form.dart';
+import '../widgets/prescriptions_reminders.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -32,24 +33,14 @@ class _MainScreenState extends State<MainScreen> {
 
   static const TextStyle optionStyle = TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static const List<Widget> _widgetOptions = <Widget>[
-    Column(
-      children: [
-        Text(
-          'Index 0: Home',
-          style: optionStyle,
-        ),
-      ],
+    Center(
+      child: PrescriptionsReminders(),
     ),
-    Scrollbar(
+    Center(
       child: PrescriptionForm(),
     ),
-    Column(
-      children: [
-        Text(
-          'Index 2: Survey',
-          style: optionStyle,
-        ),
-      ],
+    Center(
+      child: Text('To be added...'),
     ),
   ];
 
@@ -78,16 +69,16 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.medication),
             label: 'Prescriptions',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.add),
+            label: 'Add',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.check),
-            label: 'Self-Check',
+            label: 'Symptoms',
           ),
         ],
         selectedItemColor: Colors.deepPurple,

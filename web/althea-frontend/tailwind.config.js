@@ -1,3 +1,4 @@
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -6,8 +7,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        Ubuntu: ['Ubuntu', 'sans-serif'],
-        Sinera: ['Sinera', 'sans-serif'], // Use 'sans-serif' as a fallback
+        sinera: ['Sinera', 'sans-serif'], // Use 'sans-serif' as a fallback
       },
     },
   },

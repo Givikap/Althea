@@ -41,7 +41,7 @@ class Logs(models.Model):
 
 class PatientMetadata(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    medicine = models.ManyToManyField(Medicine)
+    medicine = models.TextField(default='[]')
     streak_count = models.IntegerField(default=0)
     last_logged_in = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=255, blank=True, null=True)
