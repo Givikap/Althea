@@ -5,18 +5,38 @@ function Select() {
   const navigate = useNavigate();
   
   // State to hold drugs information
-  const [drugs, setDrugs] = useState([]); 
+  const [drugs, setDrugs] = useState([]);
   const [add, setAdd] = useState(0);
 
-  const handleContinue = async() => {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/medicine/name/?name=' + drugs[0].value);
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error('Error fetching medicine:', error);
+  const handleContinue = async () => {
+    // Filter out any empty drug entries
+    const validDrugs = drugs.filter(drug => drug.value.trim() !== '');
+
+    // Create medicines in the backend
+    for (const drug of validDrugs) {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/medicine/create/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: drug.value.trim() }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log(`Medicine created: ${data.id}`);
+      } catch (error) {
+        console.error(`Error creating medicine: ${drug.value}`, error);
+        // You might want to handle this error, perhaps by showing a message to the user
+      }
     }
-    navigate('/check'); // Navigate to daily checks page
+
+    // After creating all medicines, navigate to the daily checks page
+    navigate('/check');
   };
 
   const addTo = () => {
@@ -24,7 +44,6 @@ function Select() {
       // Add a new input field with an empty value
       setDrugs([...drugs, { id: add, value: '' }]);
       setAdd(add + 1);
-      console.log(drugs);
     }
   };
 
@@ -33,7 +52,6 @@ function Select() {
       // Remove the last input field
       setDrugs(drugs.slice(0, -1));
       setAdd(add - 1);
-      console.log(drugs);
     }
   };
 
